@@ -1,6 +1,69 @@
 {
-    "disallowSpacesInsideParentheses": false,
-    "disallowSpacesInFunctionDeclaration": {
-        "beforeOpeningRoundBrace": false
-    }
+    "disallowSpaceAfterBinaryOperators": ["|"],
+    "disallowSpaceBeforeBinaryOperators": ["|"],
+    "requireCamelCaseOrUpperCaseIdentifiers": true,
+    "requireCapitalizedConstructors": true,
+    "requireCurlyBraces": true,
+    "requireDotNotation": true,
+    "requireLineBreakAfterVariableAssignment": true,
+    "requireLineFeedAtFileEnd": true,
+    "requireSpaceAfterBinaryOperators": [
+        "&",
+        "^",
+        "*",
+        "/",
+        "%",
+        "+",
+        "-",
+        "<<",
+        ">>",
+        ">>>",
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "==",
+        "!=",
+        "===",
+        "!==",
+        "&&",
+        "||"
+    ],
+    "requireSpaceBeforeBinaryOperators": [
+        "&",
+        "^",
+        "*",
+        "/",
+        "%",
+        "+",
+        "-",
+        "<<",
+        ">>",
+        ">>>",
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "==",
+        "!=",
+        "===",
+        "!==",
+        "&&",
+        "||"
+    ],
+    "requireSpaceBeforeBlockStatements": true,
+    "requireSpaceBetweenArguments": true,
+    "requireSpaceBeforeKeywords": true,
+    "requireSpacesInConditionalExpression": true,
+    "requireSpacesInForStatement": true,
+    "requireSpacesInFunction": {
+        "beforeOpeningRoundBrace": true,
+        "beforeOpeningCurlyBrace": true
+    },
+    "requireSpacesInsideArrayBrackets": "all",
+    "requireSpacesInsideParentheses": {
+        "all": true,
+        "except": [ "[", "]", "{", "}", "/*", "*/" ]
+    },
+    "validateQuoteMarks": "'"
 }
