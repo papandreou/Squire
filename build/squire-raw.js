@@ -3600,9 +3600,14 @@ proto.insertHTML = function ( html, isPaste ) {
         frag = this._doc.createDocumentFragment(),
         div = this.createElement( 'DIV' );
 
-    // Parse HTML into DOM tree
-    div.innerHTML = html;
-    frag.appendChild( empty( div ) );
+    if ( this.hasFormat( 'pre' ) || this.hasFormat( 'code' ) ) {
+        // Insert unparsed in text node
+        frag.appendChild( this._doc.createTextNode( html ) );
+    } else {
+        // Parse HTML into DOM tree
+        div.innerHTML = html;
+        frag.appendChild( empty( div ) );
+    }
 
     // Record undo checkpoint
     this._recordUndoState( range );
@@ -3650,17 +3655,21 @@ proto.insertHTML = function ( html, isPaste ) {
 };
 
 proto.insertPlainText = function ( plainText, isPaste ) {
-    var lines = plainText.split( '\n' ),
-        i, l;
-    for ( i = 1, l = lines.length - 1; i < l; i += 1 ) {
+    if ( this.hasFormat( 'pre' ) || this.hasFormat( 'code' ) ) {
+        return this.insertHTML( plainText, isPaste );
+    } else {
+        var lines = plainText.split( '\n' ),
+            i, l;
+        for ( i = 1, l = lines.length - 1; i < l; i += 1 ) {
         lines[i] = '<DIV>' +
             lines[i].split( '&' ).join( '&amp;' )
                     .split( '<' ).join( '&lt;'  )
                     .split( '>' ).join( '&gt;'  )
                     .replace( / (?= )/g, '&nbsp;' ) +
-        '</DIV>';
+            '</DIV>';
+        }
+        return this.insertHTML( lines.join( '' ), isPaste );
     }
-    return this.insertHTML( lines.join( '' ), isPaste );
 };
 
 // --- Formatting ---
