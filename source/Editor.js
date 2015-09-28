@@ -1262,6 +1262,21 @@ var decreaseListLevel = function ( frag ) {
     return frag;
 };
 
+var makePreformatted = function ( frag ) {
+    var walker = getBlockWalker( frag ),
+        lines = [],
+        node;
+    while ( node = walker.nextNode() ) {
+        // Strip down to text only
+        lines.push( node.textContent );
+    }
+    node = this._doc.createTextNode( lines.join( '\n' ) );
+    return this.createElement( 'PRE',
+        this._config.tagAttributes.pre, [
+            node
+        ] );
+};
+
 proto._ensureBottomLine = function () {
     var body = this._body,
         last = body.lastElementChild;
@@ -1527,11 +1542,11 @@ proto.insertPlainText = function ( plainText, isPaste ) {
         var lines = plainText.split( '\n' ),
             i, l;
         for ( i = 1, l = lines.length - 1; i < l; i += 1 ) {
-        lines[i] = '<DIV>' +
-            lines[i].split( '&' ).join( '&amp;' )
-                    .split( '<' ).join( '&lt;'  )
-                    .split( '>' ).join( '&gt;'  )
-                    .replace( / (?= )/g, '&nbsp;' ) +
+            lines[i] = '<DIV>' +
+                lines[i].split( '&' ).join( '&amp;' )
+                        .split( '<' ).join( '&lt;'  )
+                        .split( '>' ).join( '&gt;'  )
+                        .replace( / (?= )/g, '&nbsp;' ) +
             '</DIV>';
         }
         return this.insertHTML( lines.join( '' ), isPaste );
@@ -1795,6 +1810,8 @@ proto.decreaseQuoteLevel = command( 'modifyBlocks', decreaseBlockQuoteLevel );
 proto.makeUnorderedList = command( 'modifyBlocks', makeUnorderedList );
 proto.makeOrderedList = command( 'modifyBlocks', makeOrderedList );
 proto.removeList = command( 'modifyBlocks', removeList );
+
+proto.makePreformatted = command( 'modifyBlocks', makePreformatted );
 
 proto.increaseListLevel = command( 'modifyBlocks', increaseListLevel );
 proto.decreaseListLevel = command( 'modifyBlocks', decreaseListLevel );
