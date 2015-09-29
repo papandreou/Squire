@@ -3411,6 +3411,55 @@ var makePreformatted = function ( frag ) {
         ] );
 };
 
+var removePreformatted = function ( frag ) {
+    var range = this._doc.createRange();
+    range.setStartBefore( frag.getElementById( startSelectionId ) );
+    range.setEndAfter( frag.getElementById( endSelectionId ) );
+
+    if (!range || range.collapsed) {
+        return frag; // Maybe remove whole element instead?
+    } else {
+        var preElems = frag.querySelectorAll('pre, code');
+        if (preElems.length === 0) {
+            return frag;
+        } else {
+            var lastPreIndex = preElems.length - 1,
+                startContainer = range.startContainer,
+                startOffset = range.startOffset,
+                endContainer = range.endContainer,
+                endOffset = range.endOffset;
+            if ( /PRE|CODE/.test( getPath( endContainer ) ) && endOffset < endContainer.childNodes.length - 1 ) {
+                split( endContainer, endOffset, preElems[lastPreIndex].parentNode );
+            }
+            if ( /PRE|CODE/.test( getPath( startContainer ) ) && startOffset > 0 ) {
+                split( startContainer, startOffset, preElems[0].parentNode );
+            }
+            preElems = frag.querySelectorAll('pre, code');
+            range.setStartBefore( frag.getElementById( startSelectionId ) );
+            range.setEndAfter( frag.getElementById( endSelectionId ) );
+            var self = this,
+                node, elemsInRange;
+            for ( var i = 0; i < preElems.length; i += 1 ) {
+                node = preElems[i];
+                if ( isNodeContainedInRange( range, node, true ) ) {
+                    // replace all enclosed PRE tags with HTMLified version of text content (1 DIV per line)
+                    var nodeLines = node.textContent.split('\n');
+                    var replacement = this._doc.createDocumentFragment();
+                    /*jshint loopfunc: true*/
+                    nodeLines.forEach( function (line) {
+                        var div = self.createDefaultBlock();
+                        div.appendChild( self._doc.createTextNode (line ) );
+                        replacement.appendChild( div );
+                    });
+                    /*jshint loopfunc: false*/
+                    replaceWith( node, replacement );
+                }
+            }
+            return frag;
+        }
+    }
+};
+
 proto._ensureBottomLine = function () {
     var body = this._body,
         last = body.lastElementChild;
@@ -3946,6 +3995,7 @@ proto.makeOrderedList = command( 'modifyBlocks', makeOrderedList );
 proto.removeList = command( 'modifyBlocks', removeList );
 
 proto.makePreformatted = command( 'modifyBlocks', makePreformatted );
+proto.removePreformatted = command( 'modifyBlocks', removePreformatted );
 
 proto.increaseListLevel = command( 'modifyBlocks', increaseListLevel );
 proto.decreaseListLevel = command( 'modifyBlocks', decreaseListLevel );
