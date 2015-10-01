@@ -1,6 +1,7 @@
 /*global unexpected, describe, afterEach, beforeEach, it, Squire */
 (function () {
 'use strict';
+
 var expect = unexpected.clone()
     .installPlugin(unexpected.dom)
     .addType({
@@ -13,16 +14,19 @@ var expect = unexpected.clone()
             return output.text('Squire RTE: ').code(value.getHTML(), 'html');
         }
     })
-    .addAssertion('SquireRTE', '[not] to contain HTML', function (expect, editor, expectedValue) {
-        expect.errorMode ='nested';
-        var actualHTML = editor.getHTML();
-        if (typeof expectedValue === 'string') {
-            // BR tags are inconsistent across browsers. Removing them allows cross-browser testing.
-            return expect(actualHTML.replace(/<br>/g, ''), '[not] to be', expectedValue);
-        } else {
-            return expect(actualHTML, 'when parsed as HTML', '[not] to satisfy', expectedValue);
+    .addAssertion('DOMDocumentFragment', 'with br tags stripped', function (expect, subject) {
+        for (var i = 0 ; i < subject.childNodes.length ; i += 1) {
+            Array.prototype.forEach.call(subject.childNodes[i].querySelectorAll('br'), function (brElement) {
+                brElement.parentNode.removeChild(brElement);
+            });
         }
+        return expect.shift(subject, 0);
+    })
+    .addAssertion('SquireRTE', '[not] to contain HTML [with br tags stripped]', function (expect, editor, expectedValue) {
+        return expect(editor.getHTML(), 'when parsed as HTML fragment', 'with br tags stripped', '[not] to satisfy', expectedValue);
     });
+
+window.expect = expect;
 
 describe('Squire RTE', function () {
     var doc, editor;
@@ -39,7 +43,7 @@ describe('Squire RTE', function () {
         editor.setSelection(range);
     }
 
-    describe.skip('removeAllFormatting', function () {
+    describe('removeAllFormatting', function () {
         // Trivial cases
         it('removes inline styles', function () {
             var startHTML = '<div><i>one</i> <b>two</b> <u>three</u> <sub>four</sub> <sup>five</sup></div>';
@@ -127,17 +131,7 @@ describe('Squire RTE', function () {
             expect(editor, 'to contain HTML', startHTML);
             editor.moveCursorToStart();
             editor.makePreformatted();
-            // return expect(editor, 'to contain HTML', [
-            //     {
-            //         name: 'pre',
-            //         children: [
-            //             'one two three four five'
-            //         ]
-            //     }
-            // ]);
-            // expect(editor, 'to contain HTML', '<pre>one two three four five</pre><div></div>');
-            // console.log(editor.getDocument().body);debugger;
-            return expect(editor.getDocument().body, 'to satisfy', '<pre>ONE TWO THREE FOUR FIVE</pre><div></div>');
+            expect(editor, 'to contain HTML', '<body><pre>ONE TWO THREE FOUR FIVE</pre><div></div></body>');
         });
 
         it('adds an empty PRE element', function () {
