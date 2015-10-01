@@ -1,20 +1,27 @@
-/*global expect, describe, afterEach, beforeEach, it */
-expect = expect.clone()
+/*global unexpected, describe, afterEach, beforeEach, it, Squire */
+(function () {
+'use strict';
+var expect = unexpected.clone()
+    .installPlugin(unexpected.dom)
     .addType({
         name: 'SquireRTE',
         base: 'object',
         identify: function (value) {
             return value instanceof Squire;
         },
-        inspect: function (value) {
-            return 'Squire RTE: ' + value.getHTML();
+        inspect: function (value, depth, output) {
+            return output.text('Squire RTE: ').code(value.getHTML(), 'html');
         }
     })
-    .addAssertion('[not] to contain HTML', function (expect, editor, expectedValue) {
-        this.errorMode = 'bubble';
-        var actualHTML = editor.getHTML().replace(/<br>/g, '');
-        // BR tags are inconsistent across browsers. Removing them allows cross-browser testing.
-        expect(actualHTML, '[not] to be', expectedValue);
+    .addAssertion('SquireRTE', '[not] to contain HTML', function (expect, editor, expectedValue) {
+        expect.errorMode ='nested';
+        var actualHTML = editor.getHTML();
+        if (typeof expectedValue === 'string') {
+            // BR tags are inconsistent across browsers. Removing them allows cross-browser testing.
+            return expect(actualHTML.replace(/<br>/g, ''), '[not] to be', expectedValue);
+        } else {
+            return expect(actualHTML, 'when parsed as HTML', '[not] to satisfy', expectedValue);
+        }
     });
 
 describe('Squire RTE', function () {
@@ -32,7 +39,7 @@ describe('Squire RTE', function () {
         editor.setSelection(range);
     }
 
-    describe('removeAllFormatting', function () {
+    describe.skip('removeAllFormatting', function () {
         // Trivial cases
         it('removes inline styles', function () {
             var startHTML = '<div><i>one</i> <b>two</b> <u>three</u> <sub>four</sub> <sup>five</sup></div>';
@@ -113,9 +120,50 @@ describe('Squire RTE', function () {
         });
     });
 
+    describe('makePreformatted', function () {
+        it('adds a PRE element around text on same line', function () {
+            var startHTML = '<div>one two three four five</div>';
+            editor.setHTML(startHTML);
+            expect(editor, 'to contain HTML', startHTML);
+            editor.moveCursorToStart();
+            editor.makePreformatted();
+            // return expect(editor, 'to contain HTML', [
+            //     {
+            //         name: 'pre',
+            //         children: [
+            //             'one two three four five'
+            //         ]
+            //     }
+            // ]);
+            // expect(editor, 'to contain HTML', '<pre>one two three four five</pre><div></div>');
+            // console.log(editor.getDocument().body);debugger;
+            return expect(editor.getDocument().body, 'to satisfy', '<pre>ONE TWO THREE FOUR FIVE</pre><div></div>');
+        });
+
+        it('adds an empty PRE element', function () {
+            var startHTML = '<div></div><div>one two three four five</div>';
+            editor.setHTML(startHTML);
+            expect(editor, 'to contain HTML', startHTML);
+            editor.moveCursorToStart();
+            editor.makePreformatted();
+            expect(editor, 'to contain HTML', '<pre>\n</pre><div>one two three four five</div>');
+        });
+
+        it('expands existing PRE tags to encompass selection', function () {
+            var startHTML = '<div></div><pre>one two three four five</pre><div></div>';
+            editor.setHTML(startHTML);
+            expect(editor, 'to contain HTML', startHTML);
+            selectAll(editor);
+            editor.makePreformatted();
+            expect(editor, 'to contain HTML', '<pre>\none two three four five\n</pre>');
+        });
+
+    });
+
     afterEach(function () {
         editor = null;
         var iframe = document.getElementById('testFrame');
         iframe.src = 'blank.html';
     });
 });
+})();
